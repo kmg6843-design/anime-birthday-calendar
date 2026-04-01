@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>애니 생일 캘린더 — 라프텔</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --laftel: #816BFF;
+      --laftel-light: #F0EEFF;
+      --laftel-mid: #C4BAFF;
+      --laftel-dark: #5040CC;
+      --laftel-text: #3B2DA8;
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --border: rgba(0,0,0,0.08);
+      --border-hover: rgba(129,107,255,0.4);
+      --text-primary: #1A1A2E;
+      --text-secondary: #6B6B8A;
+      --text-tertiary: #A0A0B8;
+      --radius: 10px;
+      --radius-lg: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 24px 20px 40px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      max-width: 900px;
+      margin: 0 auto 24px;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-mark {
+      width: 32px;
+      height: 32px;
+      background: var(--laftel);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .logo-text {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .logo-sub {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 400;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .nav-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 7px 14px;
+      font-size: 13px;
+      font-family: inherit;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .nav-btn:hover {
+      border-color: var(--laftel);
+      color: var(--laftel);
+    }
+
+    .month-label {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      min-width: 110px;
+      text-align: center;
+    }
+
+    .view-toggle {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      margin-left: 8px;
+    }
+
+    .view-btn {
+      background: none;
+      border: none;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-family: inherit;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .view-btn.active {
+      background: var(--laftel);
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .calendar-wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .day-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      border-bottom: 1px solid var(--border);
+    }
+    .day-label {
+      padding: 10px 0;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+    }
+
+    .cell {
+      min-height: 90px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 8px;
+      transition: background 0.1s;
+    }
+    .cell:nth-child(7n) { border-right: none; }
+
+    .cell.has-birthday {
+      cursor: pointer;
+    }
+    .cell.has-birthday:hover {
+      background: var(--laftel-light);
+    }
+
+    .cell.other-month .date-num {
+      color: var(--text-tertiary);
+    }
+
+    .cell.today .date-num {
+      background: var(--laftel);
+      color: #fff;
+      border-radius: 50%;
+    }
+
+    .date-num {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 5px;
+    }
+
+    .chip {
+      display: block;
+      font-size: 10px;
+      padding: 3px 6px;
+      border-radius: 5px;
+      margin-bottom: 3px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      background: var(--laftel-light);
+      color: var(--laftel-text);
+      border: 1px solid var(--laftel-mid);
+      font-weight: 500;
+    }
+    .chip .title-name {
+      display: block;
+      font-size: 9px;
+      font-weight: 400;
+      color: var(--laftel-dark);
+      margin-top: 1px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* List View */
+    .list-wrap {
+      display: none;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .list-section-header {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      font-weight: 500;
+      padding: 12px 0 8px;
+      letter-spacing: 0.04em;
+    }
+
+    .list-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 6px;
+      transition: border-color 0.15s;
+    }
+    .list-item:hover { border-color: var(--laftel-mid); }
+
+    .list-date-badge {
+      min-width: 40px;
+      text-align: center;
+      background: var(--laftel-light);
+      border-radius: 8px;
+      padding: 6px 4px;
+    }
+    .list-date-day { font-size: 18px; font-weight: 600; color: var(--laftel); line-height: 1; }
+    .list-date-month { font-size: 10px; color: var(--laftel-text); margin-top: 2px; }
+
+    .list-info { flex: 1; }
+    .list-char-name { font-size: 14px; font-weight: 500; color: var(--text-primary); }
+    .list-title-name { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    .list-actions { display: flex; gap: 6px; align-items: center; }
+
+    .dday-badge {
+      font-size: 10px;
+      padding: 3px 7px;
+      border-radius: 20px;
+      background: var(--laftel-light);
+      color: var(--laftel-text);
+      border: 1px solid var(--laftel-mid);
+      font-weight: 500;
+    }
+
+    .btn-laftel {
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 7px;
+      background: none;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      text-decoration: none;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-laftel:hover { border-color: var(--laftel); color: var(--laftel); }
+
+    .btn-notion {
+      font-size: 11px;
+      padding: 5px 10px;
+      border-radius: 7px;
+      background: var(--laftel);
+      color: #fff;
+      border: none;
+      text-decoration: none;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.15s;
+    }
+    .btn-notion:hover { background: var(--laftel-dark); }
+
+    /* Modal */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(26,26,46,0.4);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: 0 20px 60px rgba(129,107,255,0.15);
+      animation: modal-in 0.2s ease;
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: translateY(8px) scale(0.98); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .modal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .modal-date { font-size: 13px; color: var(--text-tertiary); margin-bottom: 2px; }
+    .modal-title { font-size: 17px; font-weight: 600; color: var(--text-primary); }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+
+    .modal-chars { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+    .modal-char-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--laftel-light);
+      border: 1px solid var(--laftel-mid);
+      border-radius: var(--radius);
+    }
+    .modal-char-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--laftel);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #fff;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .modal-char-name { font-size: 13px; font-weight: 500; color: var(--laftel-text); }
+    .modal-char-title { font-size: 11px; color: var(--laftel-dark); margin-top: 2px; }
+
+    .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+    .modal-btn-notion {
+      display: block;
+      text-align: center;
+      background: var(--laftel);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 11px;
+      font-size: 13px;
+      font-weight: 500;
+      font-family: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: background 0.15s;
+    }
+    .modal-btn-notion:hover { background: var(--laftel-dark); }
+    .modal-btn-laftel {
+      display: block;
+      text-align: center;
+      background: none;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px;
+      font-size: 12px;
+      font-family: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .modal-btn-laftel:hover { border-color: var(--laftel); color: var(--laftel); }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-tertiary);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">
+    <div class="logo-mark">🎂</div>
+    <div>
+      <div class="logo-text">애니 생일 캘린더</div>
+      <div class="logo-sub">by laftel</div>
+    </div>
+  </div>
+  <div class="controls">
+    <button class="nav-btn" onclick="changeMonth(-1)">←</button>
+    <span class="month-label" id="month-label"></span>
+    <button class="nav-btn" onclick="changeMonth(1)">→</button>
+    <div class="view-toggle">
+      <button class="view-btn active" id="btn-cal" onclick="setView('cal')">캘린더</button>
+      <button class="view-btn" id="btn-list" onclick="setView('list')">리스트</button>
+    </div>
+  </div>
+</div>
+
+<div id="cal-view">
+  <div class="calendar-wrap">
+    <div class="day-labels">
+      <div class="day-label">SUN</div>
+      <div class="day-label">MON</div>
+      <div class="day-label">TUE</div>
+      <div class="day-label">WED</div>
+      <div class="day-label">THU</div>
+      <div class="day-label">FRI</div>
+      <div class="day-label">SAT</div>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+</div>
+
+<div class="list-wrap" id="list-view">
+  <div id="list-container"></div>
+</div>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalBg(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="modal-date" id="modal-date"></div>
+        <div class="modal-title" id="modal-title"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-chars" id="modal-chars"></div>
+    <div class="modal-actions">
+      <a class="modal-btn-notion" id="modal-notion-btn" href="#" target="_blank">+ 노션에 이벤트 추가</a>
+      <a class="modal-btn-laftel" id="modal-laftel-btn" href="#" target="_blank">라프텔에서 작품 보기 →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+  const NOTION_DB_URL = "https://www.notion.so/laftel/a0e4158c7c814ba688ca0baa80310aac";
+
+  const BIRTHDAYS = [
+    { month: 1,  day: 15, name: "나루토 우즈마키",    title: "나루토",               laftel_id: "416" },
+    { month: 1,  day: 23, name: "우치하 사스케",      title: "나루토",               laftel_id: "416" },
+    { month: 2,  day: 11, name: "후지와라 치카",      title: "카구야님은 고백받고 싶어", laftel_id: "7777" },
+    { month: 3,  day: 3,  name: "미카사 아커만",      title: "진격의 거인",            laftel_id: "416" },
+    { month: 3,  day: 28, name: "아로나",            title: "블루 아카이브",           laftel_id: "11111" },
+    { month: 4,  day: 1,  name: "오사카 시노부",      title: "귀멸의 칼날",            laftel_id: "5789" },
+    { month: 4,  day: 7,  name: "레비 아커만",        title: "진격의 거인",            laftel_id: "416" },
+    { month: 4,  day: 12, name: "키리시마 에이지로",   title: "나의 히어로 아카데미아",   laftel_id: "1234" },
+    { month: 4,  day: 20, name: "이카리 신지",        title: "신세기 에반게리온",        laftel_id: "456" },
+    { month: 4,  day: 22, name: "하루카 나나세",      title: "FREE!",               laftel_id: "789" },
+    { month: 5,  day: 5,  name: "토도로키 쇼토",      title: "나의 히어로 아카데미아",   laftel_id: "1234" },
+    { month: 6,  day: 9,  name: "시노미야 카구야",    title: "카구야님은 고백받고 싶어", laftel_id: "7777" },
+    { month: 7,  day: 7,  name: "나카노 이츠키",      title: "오등분의 신부",           laftel_id: "9999" },
+    { month: 8,  day: 22, name: "아스나",            title: "소드 아트 온라인",         laftel_id: "321" },
+    { month: 9,  day: 1,  name: "에렌 예거",          title: "진격의 거인",             laftel_id: "416" },
+    { month: 10, day: 10, name: "에미야 시로",        title: "Fate/stay night",       laftel_id: "654" },
+    { month: 11, day: 11, name: "키리토",            title: "소드 아트 온라인",         laftel_id: "321" },
+    { month: 12, day: 24, name: "토오루 오이카와",    title: "하이큐!!",               laftel_id: "888" },
+  ];
+
+  let curYear = new Date().getFullYear();
+  let curMonth = new Date().getMonth() + 1;
+  let viewMode = 'cal';
+
+  function laftelUrl(id) { return `https://laftel.net/item/${id}`; }
+  function getDays(y, m) { return new Date(y, m, 0).getDate(); }
+  function isToday(y, m, d) {
+    const t = new Date();
+    return t.getFullYear() === y && t.getMonth() + 1 === m && t.getDate() === d;
+  }
+  function getBdays(m, d) { return BIRTHDAYS.filter(b => b.month === m && b.day === d); }
+
+  function makeNotionUrl(bdays) {
+    const first = bdays[0];
+    const title = bdays.length === 1
+      ? `${first.name} 생일 이벤트`
+      : `${first.name} 외 ${bdays.length - 1}명 생일 이벤트`;
+    const params = new URLSearchParams({
+      "이벤트명": title,
+      "캐릭터": bdays.map(b => b.name).join(", "),
+      "작품명": [...new Set(bdays.map(b => b.title))].join(", "),
+      "라프텔 링크": laftelUrl(first.laftel_id),
+      "상태": "아이디어",
+    });
+    return `${NOTION_DB_URL}?${params.toString()}`;
+  }
+
+  function openModal(month, day) {
+    const bdays = getBdays(month, day);
+    if (!bdays.length) return;
+    document.getElementById('modal-date').textContent = `${curYear}년 ${month}월 ${day}일`;
+    document.getElementById('modal-title').textContent =
+      bdays.length === 1 ? `${bdays[0].name}의 생일` : `${bdays.length}명의 생일`;
+    const chars = document.getElementById('modal-chars');
+    chars.innerHTML = '';
+    bdays.forEach(b => {
+      const card = document.createElement('div');
+      card.className = 'modal-char-card';
+      card.innerHTML = `
+        <div class="modal-char-icon">${b.name[0]}</div>
+        <div>
+          <div class="modal-char-name">${b.name}</div>
+          <div class="modal-char-title">${b.title}</div>
+        </div>`;
+      chars.appendChild(card);
+    });
+    document.getElementById('modal-notion-btn').href = makeNotionUrl(bdays);
+    document.getElementById('modal-laftel-btn').href = laftelUrl(bdays[0].laftel_id);
+    document.getElementById('modal-overlay').classList.add('open');
+  }
+
+  function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+  function closeModalBg(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
+
+  function renderCalendar() {
+    const monthKo = ["","1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
+    document.getElementById('month-label').textContent = `${curYear}년 ${monthKo[curMonth]}`;
+    const grid = document.getElementById('cal-grid');
+    grid.innerHTML = '';
+    const firstDay = new Date(curYear, curMonth - 1, 1).getDay();
+    const daysInMonth = getDays(curYear, curMonth);
+    const prevDays = getDays(curYear, curMonth === 1 ? 12 : curMonth - 1);
+    const total = Math.ceil((firstDay + daysInMonth) / 7) * 7;
+
+    for (let i = 0; i < total; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      let day, month = curMonth, isOther = false;
+
+      if (i < firstDay) {
+        day = prevDays - firstDay + 1 + i;
+        month = curMonth === 1 ? 12 : curMonth - 1;
+        isOther = true; cell.classList.add('other-month');
+      } else if (i >= firstDay + daysInMonth) {
+        day = i - firstDay - daysInMonth + 1;
+        month = curMonth === 12 ? 1 : curMonth + 1;
+        isOther = true; cell.classList.add('other-month');
+      } else {
+        day = i - firstDay + 1;
+      }
+
+      if (isToday(curYear, curMonth, day) && !isOther) cell.classList.add('today');
+
+      const dn = document.createElement('div');
+      dn.className = 'date-num';
+      dn.textContent = day;
+      cell.appendChild(dn);
+
+      if (!isOther) {
+        const bdays = getBdays(month, day);
+        if (bdays.length) {
+          cell.classList.add('has-birthday');
+          cell.addEventListener('click', () => openModal(month, day));
+          bdays.forEach(b => {
+            const chip = document.createElement('div');
+            chip.className = 'chip';
+            chip.innerHTML = `${b.name}<span class="title-name">${b.title}</span>`;
+            cell.appendChild(chip);
+          });
+        }
+      }
+      grid.appendChild(cell);
+    }
+  }
+
+  function renderList() {
+    const monthKo = ["","1월","2월","3월","4월","5월","6월","7월","8월","9월","10월","11월","12월"];
+    document.getElementById('month-label').textContent = `${curYear}년 ${monthKo[curMonth]}`;
+    const container = document.getElementById('list-container');
+    container.innerHTML = '';
+    const today = new Date();
+    const tm = today.getMonth() + 1, td = today.getDate();
+    const list = BIRTHDAYS.filter(b => b.month === curMonth).sort((a, b) => a.day - b.day);
+
+    const hdr = document.createElement('div');
+    hdr.className = 'list-section-header';
+    hdr.textContent = `${monthKo[curMonth]} 생일 · ${list.length}명`;
+    container.appendChild(hdr);
+
+    if (!list.length) {
+      container.innerHTML += `<div class="empty-state">이 달의 생일이 없습니다.</div>`;
+      return;
+    }
+
+    list.forEach(b => {
+      const item = document.createElement('div');
+      item.className = 'list-item';
+      const dday = (b.month === tm && b.day >= td) ? b.day - td : null;
+      const ddayHtml = dday !== null
+        ? `<span class="dday-badge">${dday === 0 ? '오늘!' : `D-${dday}`}</span>` : '';
+      const notionUrl = makeNotionUrl([b]);
+      item.innerHTML = `
+        <div class="list-date-badge">
+          <div class="list-date-day">${b.day}</div>
+          <div class="list-date-month">${monthKo[b.month]}</div>
+        </div>
+        <div class="list-info">
+          <div class="list-char-name">${b.name} ${ddayHtml}</div>
+          <div class="list-title-name">${b.title}</div>
+        </div>
+        <div class="list-actions">
+          <a class="btn-laftel" href="${laftelUrl(b.laftel_id)}" target="_blank">라프텔</a>
+          <a class="btn-notion" href="${notionUrl}" target="_blank">+ 노션</a>
+        </div>`;
+      container.appendChild(item);
+    });
+  }
+
+  function changeMonth(dir) {
+    curMonth += dir;
+    if (curMonth > 12) { curMonth = 1; curYear++; }
+    if (curMonth < 1)  { curMonth = 12; curYear--; }
+    render();
+  }
+
+  function setView(v) {
+    viewMode = v;
+    document.getElementById('btn-cal').classList.toggle('active', v === 'cal');
+    document.getElementById('btn-list').classList.toggle('active', v === 'list');
+    document.getElementById('cal-view').style.display = v === 'cal' ? 'block' : 'none';
+    document.getElementById('list-view').style.display = v === 'list' ? 'block' : 'none';
+    render();
+  }
+
+  function render() { viewMode === 'cal' ? renderCalendar() : renderList(); }
+  render();
+</script>
+</body>
+</html>
