@@ -475,26 +475,56 @@
 <script>
   const NOTION_DB_URL = "https://www.notion.so/laftel/a0e4158c7c814ba688ca0baa80310aac";
 
-  const BIRTHDAYS = [
-    { month: 1,  day: 15, name: "나루토 우즈마키",    title: "나루토",               laftel_id: "416" },
-    { month: 1,  day: 23, name: "우치하 사스케",      title: "나루토",               laftel_id: "416" },
-    { month: 2,  day: 11, name: "후지와라 치카",      title: "카구야님은 고백받고 싶어", laftel_id: "7777" },
-    { month: 3,  day: 3,  name: "미카사 아커만",      title: "진격의 거인",            laftel_id: "416" },
-    { month: 3,  day: 28, name: "아로나",            title: "블루 아카이브",           laftel_id: "11111" },
-    { month: 4,  day: 1,  name: "오사카 시노부",      title: "귀멸의 칼날",            laftel_id: "5789" },
-    { month: 4,  day: 7,  name: "레비 아커만",        title: "진격의 거인",            laftel_id: "416" },
-    { month: 4,  day: 12, name: "키리시마 에이지로",   title: "나의 히어로 아카데미아",   laftel_id: "1234" },
-    { month: 4,  day: 20, name: "이카리 신지",        title: "신세기 에반게리온",        laftel_id: "456" },
-    { month: 4,  day: 22, name: "하루카 나나세",      title: "FREE!",               laftel_id: "789" },
-    { month: 5,  day: 5,  name: "토도로키 쇼토",      title: "나의 히어로 아카데미아",   laftel_id: "1234" },
-    { month: 6,  day: 9,  name: "시노미야 카구야",    title: "카구야님은 고백받고 싶어", laftel_id: "7777" },
-    { month: 7,  day: 7,  name: "나카노 이츠키",      title: "오등분의 신부",           laftel_id: "9999" },
-    { month: 8,  day: 22, name: "아스나",            title: "소드 아트 온라인",         laftel_id: "321" },
-    { month: 9,  day: 1,  name: "에렌 예거",          title: "진격의 거인",             laftel_id: "416" },
-    { month: 10, day: 10, name: "에미야 시로",        title: "Fate/stay night",       laftel_id: "654" },
-    { month: 11, day: 11, name: "키리토",            title: "소드 아트 온라인",         laftel_id: "321" },
-    { month: 12, day: 24, name: "토오루 오이카와",    title: "하이큐!!",               laftel_id: "888" },
-  ];
+  // ✅ Google Sheets CSV URL을 여기에 붙여넣으세요
+  // 설정 방법: 구글 시트 → 파일 → 공유 → 웹에 게시 → CSV → 게시 후 URL 복사
+  const SHEET_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQxB6jX7RDeO2pJecrE20ByvcI3od4LnC2iASG1I7_cVuG_Y71DhctPI3pHNHXIpA/pub?gid=987156761&single=true&output=csv";
+
+  let BIRTHDAYS = [];
+
+  function parseCSV(text) {
+    const lines = text.trim().split("\n").slice(1); // 헤더 제거
+    return lines
+      .map(line => {
+        // CSV 파싱 (따옴표 처리 포함)
+        const cols = [];
+        let cur = "", inQ = false;
+        for (let i = 0; i < line.length; i++) {
+          const ch = line[i];
+          if (ch === '"') { inQ = !inQ; }
+          else if (ch === ',' && !inQ) { cols.push(cur.trim()); cur = ""; }
+          else { cur += ch; }
+        }
+        cols.push(cur.trim());
+        const [name, title, month, day, laftel_id] = cols;
+        if (!name || !month || !day || !laftel_id) return null;
+        return { name, title, month: parseInt(month), day: parseInt(day), laftel_id: laftel_id.trim() };
+      })
+      .filter(Boolean);
+  }
+
+  async function loadData() {
+    if (!SHEET_CSV_URL) {
+      // URL 미설정 시 샘플 데이터로 동작
+      BIRTHDAYS = [
+        { month: 1,  day: 15, name: "나루토 우즈마키",   title: "나루토",               laftel_id: "416" },
+        { month: 1,  day: 23, name: "우치하 사스케",     title: "나루토",               laftel_id: "416" },
+        { month: 3,  day: 3,  name: "미카사 아커만",     title: "진격의 거인",           laftel_id: "실제ID입력" },
+        { month: 4,  day: 7,  name: "레비 아커만",       title: "진격의 거인",           laftel_id: "실제ID입력" },
+        { month: 5,  day: 5,  name: "토도로키 쇼토",     title: "나의 히어로 아카데미아", laftel_id: "실제ID입력" },
+      ];
+      render();
+      return;
+    }
+    try {
+      const res = await fetch(SHEET_CSV_URL);
+      const text = await res.text();
+      BIRTHDAYS = parseCSV(text);
+    } catch (e) {
+      console.error("시트 로딩 실패:", e);
+      BIRTHDAYS = [];
+    }
+    render();
+  }
 
   let curYear = new Date().getFullYear();
   let curMonth = new Date().getMonth() + 1;
@@ -661,7 +691,7 @@
   }
 
   function render() { viewMode === 'cal' ? renderCalendar() : renderList(); }
-  render();
+  loadData();
 </script>
 </body>
 </html>
